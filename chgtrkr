@@ -1,0 +1,182 @@
+#!/usr/bin/perl
+
+#This script is to track changes in the branches' router.
+#As part of a cron job it will run nightly.
+#It will go to each branch and pull the config file.
+#Then the newly pulled config file will be compared against a generated template
+#file.  Any differences will be reported to the webpage.
+
+#required packages. 
+require Expect;
+use Net::Ping;
+
+#variables
+#Make timestamp to date archives.
+$coredate = `date`; 
+($day, $month, $date, $time, $zone, $year) = split /\s+/, $coredate;
+($hour, $min, $sec) = split /:/, $time;
+$timestamp = join ("", $date, $month, $hour, $min);
+
+#Static Passwords
+$lpass = "STLNSG";
+$epass = "xxxxxx";
+
+
+#parse arguments to determine which icore to do
+if ($ARGV[0])
+	{
+	if ($ARGV[0] =~ /21117/)
+		{
+		$icore = "21117";
+		}
+	if ($ARGV[0] =~ /26418/)
+		{
+		$icore = "26418";
+		}
+	if ($ARGV[0] =~ /27584/)
+		{
+		$icore = "27584";
+		}
+	if ($ARGV[0] =~ /29678/)
+		{
+		$icore = "29678";
+		}	
+
+	}
+else
+	{
+	die "Need icore as argument!\n";
+	}
+
+$brlistfile = $icore . "brlist";
+
+
+#open files
+open (WOUT, ">/home/htdocs/chgtrkr.$icore.html"); #Webpage for icore
+#open (WOUT, ">/home/htdocs/chgtrkr.test.html"); #Webpage for testing
+open (OUT, ">/home/radar/logfiles/chgtrkr.$timestamp"); #Log file we don't use
+open (BRLIST, "/home/radar/scriptfiles/$brlistfile") or die "Could not open brlist\n"; #Open brlist
+
+#format webpage
+print WOUT "<table border cellspacing=0 cellpadding=2 bordercolor=black>";
+print WOUT "<small>", "<tr>";
+print WOUT "<th>Br. Number</th>";
+print WOUT "<th>Cfg. Status</th>";
+print WOUT "<th>Differences</th>";
+print WOUT "</tr>";
+
+#check to make sure the TFTP server is online and running OK.
+$stdin=Expect->exp_init(\*STDIN);
+$chktftp = Expect->spawn("tftp 161.161.219.197");
+$chktftp->log_stdout(1);
+$chktftp->expect(10, "> ") or die "TFTP server is not Responding.\n";
+print $chktftp "put tftest\r";
+$chktftp->expect(10, "> ") or die "TFTP server is not Responding.\n";
+print $chktftp "quit\r";
+$chktftp->hard_close();
+
+
+#make object to do pings with Net::Ping
+$p = Net::Ping->new("icmp");
+
+
+#Go to each branch and get the config.
+while (<BRLIST>)
+	{
+	$pingresult = "";
+	$a = 0;
+	$x = 0;
+	$y = 0;
+	chomp($branch = $_);
+	print "\n\n*******Creating .tpl...";
+	system("/home/radar/scriptfiles/makeconfig $branch $icore");
+	print ".tpl created....";
+	$gettftp = "cnbr" . $branch . "-confg";
+	print "..touching...";
+	system("touch /tftpboot/$gettftp");
+	system("chmod 777 /tftpboot/$gettftp");
+	chomp($template);
+	$stdin=Expect->exp_init(\*STDIN);
+	print "Pinging...";
+	$hostname = "cnbr" . $branch;
+	if($p->ping("$hostname"))
+		{
+		print "ok...";
+		}
+	else
+		{
+                print WOUT "<tr align=left><td bgcolor = yellow>$branch",
+                           "</td><td bgcolor = yellow>UnPingable</td>",
+                           "<td>&nbsp;</td>";
+		print "...failed";
+		next;
+		}
+
+	$telnet = Expect->spawn("telnet cnbr$branch");
+        $telnet->log_stdout(1);
+	$telnet->expect(30, "Username: ") or $x = "1";
+        if ($x == "1") 
+		{
+		print WOUT "<tr align=left><td bgcolor = yellow>$branch",
+			   "</td><td bgcolor = yellow>No Prompt</td>",
+			   "<td>&nbsp;</td>";
+		next;
+		}
+	print $telnet "$lpass\r";
+	$telnet->expect(30, "Password: ");
+	print $telnet "$epass\r";
+	$telnet->expect(30, "#");
+	print $telnet "copy running-config tftp\r";
+	$telnet->expect(30, "]? ");
+	print $telnet "161.161.219.197\r";
+	$telnet->expect(30, "g]? ");
+	print $telnet "\r";
+	$telnet->expect(60, "#"); 
+	print $telnet "quit\r";
+	$telnet->hard_close();
+	print OUT "cfg file for $branch obtained at $timestamp\n";
+
+#Run Cleaner To Remove BRI0/0 and Serial1/1
+	print "Cleaning.....";
+	system("/home/radar/scriptfiles/cleaner $branch $icore");
+	print "Doing Diff....";		
+	system("diff -wib /home/radar/dbfiles/$icore/$branch.tpl /home/radar/dbfiles/$icore/$branch.clean > /home/radar/scriptfiles/temp$icore");
+	system("copy /home/radar/scriptfiles/temp$icore /home/radar/dbfiles/$icore/$branch.diff");
+	print "Translating Diff....";
+	system("/home/radar/scriptfiles/translate $icore > /home/radar/dbfiles/$icore/$branch.out");
+
+#diff is used in loop to determine if changes were made, therefore needs
+#the ***** lines striped out.
+#diff2 is going to be converted to HTML formatting for the web page and does
+#need the ***** lines.
+	$diff = `sed '/\*\*\*/d' /home/radar/dbfiles/$icore/$branch.out`;	
+	$diff2 = `egrep "[a-zA-Z]" /home/radar/dbfiles/$icore/$branch.out`;
+	print "Printing Output....";		
+	if ($diff !~ /\w/g)
+		{
+		print "NoChg...";
+		print WOUT "<tr align=left>";
+		print WOUT "<td bgcolor = green>$branch</td>";
+		print WOUT "<td bgcolor = green>No Change</td>";
+		print WOUT "<td>&nbsp;</td>";
+		print WOUT "</tr>\n";
+		print OUT "config for $branch is unchanged\n";
+		print "done.";
+		}
+	else 
+		{
+		print "Modified...";
+		$diff2 =~ s/\n/\n<BR>/g;
+		print WOUT "<tr align=left>";
+		print WOUT "<td bgcolor = red>$branch</bgcolor></td>";
+		print WOUT "<td bgcolor = red>Modified</bgcolor></td>";
+		print WOUT "<td><small>$diff2</small></td>";
+		print WOUT "</tr>\n";
+		$diff =~ s/<BR>/\n/g;
+		print OUT "config for $branch was modified\n";
+		print OUT "The changes are: $diff\n";
+		print "done";
+
+	} }
+system("copy /home/htdocs/chgtrkr.$icore.html /home/htdocs/archive/chgtrkr.$icore.$timestamp.html");
+#system("rm /home/radar/dbfiles/$icore/*");
