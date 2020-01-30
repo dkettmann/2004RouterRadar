@@ -1,0 +1,183 @@
+#!/usr/bin/perl
+#brlistgen
+#Authors: Dan Kettmann & Fabrice Perrier - CiFi Network Support - St. Louis
+#This program generates branch listings as they are in DNS.
+#It will loop through the IP range of any ICORE and pull out branch numbers.
+#The accuracy of the output is only as accurate as DNS is.
+#WaMu branches at this time have no ICORE number so we gave them one, 28231.
+#The program will output to RADAR branch lists in /home/radar/scriptfiles
+#automatically overwriting the old entries.
+#I pity 'da foo who runs RADAR while this is still running.
+#This program should always be run with the -ga flag unless only 1 ICORE
+#needs to be updated, in that case the syntax is "brlistgen -g <icore #>".
+#
+#Below lines are exception branches that we want to skip.
+@exc = qw(002124 100054 320025 320100 090032 000209 030104 090064 060015 320025 090032 090802 030114 060034 130847 000013 000014 640100);
+use Getopt::Std qw(getopts);
+getopts("ga", \%option);
+
+if ($option{a})
+        {
+        $ARGV[0] = "2111726418275842967828231";
+        }
+if ($option{g})
+        {
+        if ($ARGV[0] =~ /26418/)
+                {
+                print "\nGenerating ICORE26418...\n\nSTART:\n";
+                @loop = (254, 253, 252, 251, 250);
+                open(LIST, ">/home/radar/scriptfiles/26418brlist");
+                ($a, $b) = (10, 166);
+                for ($c = 0; $c < 128; $c++)
+                        {
+                        foreach $d (@loop)
+                                {
+                                $ip = join '.', $a, $b, $c, $d;
+                                $reply = `host $ip`;
+                                if ($reply =~ /cnbr\d{6}/i)
+                                        {
+                                        $reply =~ /(\d{6})/;
+                                        $branch = $1;
+                                        foreach $br (@exc)
+                                                {
+                                                if ($br == "$branch")
+                                                        {
+                                                        print "***BAD $branch....not sent to list\n";
+                                                        next;
+                                                        }
+                                                }
+                                        print LIST "$branch", "\n";
+                                        print "$branch\n";
+                                        }
+                                }
+                        }
+                }
+        if ($ARGV[0] =~ /21117/)
+                {
+                print "\nGenerating ICORE21117...\n\nSTART:\n";
+                @loop = (254, 253, 252, 251, 250);
+                open(LIST, ">/home/radar/scriptfiles/21117brlist");
+                ($a, $b) = (10, 166);
+                for ($c = 128; $c < 256; $c++)
+                        {
+                        foreach $d (@loop)
+                                {
+                                $ip = join '.', $a, $b, $c, $d;
+                                $reply = `host $ip`;
+                                if ($reply =~ /cnbr\d{6}/i)
+                                        {
+                                        $reply =~ /(\d{6})/;
+                                        $branch = $1;
+                                        foreach $br (@exc)
+                                                {
+                                                if ($br == "$branch")
+                                                        {
+                                                        print "***BAD $branch...not sent to branch\n";
+                                                        next;
+                                                        }
+                                                }
+                                        print LIST "$branch", "\n";
+                                        print "$branch\n";
+                                        }
+                                }
+                        }
+                }
+        if ($ARGV[0] =~ /27584/)
+                {
+                print "\nGenerating ICORE27584...\n\nSTART:\n";
+                @loop = (254, 253, 252, 251, 250);
+                open(LIST, ">/home/radar/scriptfiles/27584brlist");
+                ($a, $b) = (10, 167);
+                for ($c = 0; $c < 128; $c++)
+                        {
+                        foreach $d (@loop)
+                                {
+                                $ip = join '.', $a, $b, $c, $d;
+                                $reply = `host $ip`;
+                                if ($reply =~ /cnbr\d{6}/i)
+                                        {
+                                        $reply =~ /(\d{6})/;
+                                        $branch = $1;
+                                        foreach $br (@exc)
+                                                {
+                                                if ($br == "$branch")
+                                                        {
+                                                        print "***BAD $branch....not sent to list\n";
+                                                        next;
+                                                        }
+                                                }
+                                        print LIST "$branch", "\n";
+                                        print "$branch\n";
+                                        }
+                                }
+                        }
+                }
+        if ($ARGV[0] =~ /28231/)
+                {
+                print "\nGenerating wmfserverlist...\n\nSTART:\n";
+                @loop = (254, 253, 252, 251, 254);
+                open(LIST, ">/home/radar/scriptfiles/28231brlist");
+                ($a, $b) = (10, 164);
+                for ($c = 0; $c < 128; $c++)
+                        {
+                        foreach $d (@loop)
+                                {
+                                $ip = join '.', $a, $b, $c, $d;
+                                $result = `host $ip`;
+                                if ($result =~ m/cnbr\d{6}/i)
+                                        {
+                                        $result =~ /(\d{6})/;
+                                        $branch = $1;
+                                        foreach $br (@exc)
+                                                {
+                                                if ($br == "$branch")
+                                                        {
+                                                        print "***BAD $branch..not sent to list\n";
+                                                        next;
+                                                        }
+                                                }
+                                        print LIST "$branch", "\n";
+                                        print "$branch\n";
+                                        }
+
+                                }
+                        }
+                }
+        if ($ARGV[0] =~ /29678/)
+                {
+                print "\nGenerating ICORE29678...\n\nSTART:\n";
+                @loop = (254, 253, 252, 251, 250);
+                open(LIST, ">/home/radar/scriptfiles/29678brlist");
+                ($a, $b) = (10, 167);
+                for ($c = 128; $c < 256; $c++)
+                        {
+                        foreach $d (@loop)
+                                {
+                                $ip = join '.', $a, $b, $c, $d;
+                                $reply = `host $ip`;
+                                if ($reply =~ /cnbr\d{6}/i)
+                                        {
+                                        $reply =~ /(\d{6})/;
+                                        $branch = $1;
+                                        foreach $br (@exc)
+                                                {
+                                                if ($br == "$branch")
+                                                        {
+                                                        print "***BAD $branch\n";
+                                                        next;
+                                                        }
+                                                }
+                                        if ($branch !~ /^6\d+/ && $branch !~ /^7\d+/)
+                                                {
+                                                next;
+                                                }
+                                        print LIST "$branch", "\n";
+                                        print "$branch\n";
+                                        }
+                                }
+                        }
+                }
+        }
+
+
+
