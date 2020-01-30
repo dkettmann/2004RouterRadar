@@ -9,6 +9,11 @@ We wanted it to run overnight and in the morning it would generate an HTML repor
 previous night when we captured it, here is the diff output."  Management was *very* happy with this one if I recall correctly.
 It did a lot with what we knew and had at the time. 
 
-I should revisit this one and write more. It was fun to work with the Expect module in Perl.  Also I did blow away one password
-from this script -- I realized my current medium security password was once-upon-a-time the one I used for this job's enable pass.
+Also included is brlistgen, which would bug the hell out of the DNS server asking if any possible branch IP address had a name, and
+if so would put that branch name/IP in to a list.  That generated list would be the one that RADAR used for its nightly job, making DNS a
+type of single-source-of-truth for branch listing.
+
+I should revisit this one and write more, a lot of thought and work went in to it. It was fun to work with the Expect module in Perl.
+Also I did blow away one password from this script -- I realized my current medium security password was once-upon-a-time the one
+I used for this job's enable pass.
 
