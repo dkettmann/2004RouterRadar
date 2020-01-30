@@ -8,3 +8,6 @@ a network of aprox 2000 branch sites and we really wanted to know if any of the 
 We wanted it to run overnight and in the morning it would generate a report and say "Branch XXXX had a different config than the
 previous night when we captured it, here is the diff output."  Management was *very* happy with this one if I recall correctly.
 It did a lot with what we knew and had at the time. 
+
+I should revisit this one and write more. It was fun to work with the Expect module in Perl.  Also I did blow away one password
+from this script -- I realized my current medium security password was once-upon-a-time the one I used for this job's enable pass.
