@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+
+unless ($ARGV[0])
+        {
+        print "Missing ICORE number !\n";
+        exit;
+        }
+$icore = $ARGV[0];
+
+$diff = `cat /home/radar/scriptfiles/temp$icore`;
+@lines = split /\n/, $diff;
+
+#####This loop just to separate entrys.
+foreach $line (@lines)
+	{
+	if ($line =~ /^\d/) 	#If line is header then put entry seperator.
+		{
+		$out = $out . "New Entry\n" . $line . "\n";
+		}
+	else 			#If not just throw line on the pile.
+		{
+		$out = $out . $line . "\n";
+		}
+	}
+
+#now that we have them separated, put each entry as an array item.		
+@entrys = split /New Entry\n/, $out;
+
+
+#Define Exceptions
+@exc = ("enable secret","clock-period", "password 7", "description", "sdlc partner", "flowcontrol", "scheduler", "arp frame-relay", "service-module", "banner motd", "half-duplex", "isdn switch-type");
+
+
+#now we translate each item into english (the language of Champions!)
+foreach $item (@entrys)
+	{
+	$u = "";
+	foreach $exception (@exc)
+		{
+		if ($item =~ m/$exception/)
+			{
+			$u = "1";
+			}
+		}
+	if ($u == "1")
+		{
+		next;
+		}
+
+	#With (a)dd and (d)elete we will print all after we get all.
+	#With (c)hange will we print at the time we divide it up
+	#Just easier that way and because I said so
+
+	if ($item =~ /\da\d/) # add if "a" surrounded by digit
+		{
+		$item =~ s/^\d\S+//;		#remove header
+		$item =~ s/>//g; 		#remove the gt signs	
+		chomp($item);
+		$addout = $addout . $item;
+		next;
+		}
+	if ($item =~ /\dc\d/) # change if "c" surrounded by digit
+		{
+                $item =~ s/^\d\S+//;            #remove header
+		$item =~ s/[<>]//g;		#remove gt & lt signs
+		($change1, $change2) = split /\-\-\-/, $item; #split before 
+							      #and after
+		print "******CHANGED******\n";
+		print 'Line(s):', $change1, "Have Changed to:", $change2,
+		"\n";
+		}
+	if ($item =~ /\dd\d/) # delete if "d" surrounded by digit
+		{
+		$item =~ s/^\d\S+//;		#remove header
+                $item =~ s/<//g; 		#take out the lt signs
+		chomp($item);
+		$delout = $delout . $item; 
+		next;
+		}
+	}
+
+
+#Print the removed and added lists if they contain actual characters.
+if ($delout =~ m/[a-zA-Z]/m)
+	{
+	print "******MISSING LINES******" , $delout, "\n";
+	}
+if ($addout =~ m/[a-zA-Z]/m)
+	{
+	print "******EXTRA LINES******" , $addout, "\n";
+	}
+#Take a bow
