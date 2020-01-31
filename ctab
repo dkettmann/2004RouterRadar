@@ -1,0 +1,33 @@
+#ident	"@(#)unixsrc:usr/src/common/cmd/.adm/root /main/uw7_nj/2"
+#ident  "$Header: $"
+#
+# The root crontab should be used to perform accounting data collection.
+#
+1,30 * * * * $TFADMIN /usr/bin/ps -p $$ >/dev/null
+5 4 * * * /usr/lib/dstime/dst_sync
+30 08 * * 2-6 /home/pplus/bin/get_hwinv > /dev/null 2>&1
+00 08 * * 2-6 /home/pplus/bin/get_svr_info > /usr/adm/dist/hwinv/u--cf--b.svr 2>&1
+03 08 * * 2-6 /home/pplus/bin/get_prt_info > /usr/adm/dist/hwinv/u--cf--b.prt 2>&1
+# Run cfpasswd at 00:05 each day
+5 7 * * * /home/audit/cfpasswd >/dev/null 2>&1
+00 05 * * * /home/ca/tngam/unix_agent/amo_do_scan 2>/dev/null >/dev/null
+# backup tape check
+30 09-19 * * * /home/pplus/admcfg/bkup.tapechk
+# weekend backup tape check every 10 minutes
+0,10,20,40,50 9-19 * * 0,6 /home/pplus/admcfg/bkup.tapechk
+# Daily BACKUP processing
+00 22 * * * /home/pplus/admcfg/bkup.full >/home/pplus/prm/tables/backup/backup.trace 2>&1
+# Scorenet processing
+25 06 * * * /home/pplus/scorenet/scorenet.lsx > /home/pplus/scorenet/sn.cron 2>&1
+# Check for EOM
+00 10 * * *   /home/moa/bin/check_comm_date >/dev/null 2>&1
+# Deliquency processing
+00 07 * * * /home/pplus/deliq/deliq.lsx >/home/pplus/deliq/deliq.cron 2>&1
+# Run paidaccts deamon to check for paid off accounts to process on Sat. 4:00pm
+00 16 * * 6 /home/moa/bin/paidaccts.lsx > /home/pplus/logs/paidaccts.log 2>&1
+00  02  *  *  *   /home/bmuser/sh/brmgrcron.sh >/dev/null 2>&1
+29  01  *  *  0   /home/bmuser/sh/swaplog.sh >/dev/null 2>&1
+00 01 * * * /home/radar/scriptfiles/chgtrkr 26418
+00 02 * * * /home/radar/scriptfiles/chgtrkr 21117
+00 03 * * * /home/radar/scriptfiles/chgtrkr 27584
+00 04 * * * /home/radar/scriptfiles/chgtrkr 29678
