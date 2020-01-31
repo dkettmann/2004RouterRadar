@@ -17,3 +17,4 @@ I should revisit this one and write more, a lot of thought and work went in to i
 Also I did blow away one password from this script -- I realized my current medium security password was once-upon-a-time the one
 I used for this job's enable pass.
 
+Also I added the "translate" script because I think it was an intermediate step in generating the report after it ran maybe?
