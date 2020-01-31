@@ -18,3 +18,4 @@ Also I did blow away one password from this script -- I realized my current medi
 I used for this job's enable pass.
 
 Also I added the "translate" script because I think it was an intermediate step in generating the report after it ran maybe?
+....and the crontab that kicked off the script for each ICORE (aprox 700 sites each).
